@@ -1,0 +1,66 @@
+suite: Validating the configmap helm template
+templates:
+  - configmaps.yaml
+tests:
+  - it: "ConfigMap creation under the family namespace"
+    set:
+      global:
+        landscape: "itg"
+        namespace: "family-sampleapp"
+      deployment.configmap:
+        - name: test-configmap    
+          data:
+            lives: 3
+            enemies.cheat: true
+            enemies.cheat.level: noGoodRotten
+    asserts:
+      - hasDocuments:
+          count: 1
+      - containsDocument:
+          kind: ConfigMap
+          apiVersion: v1
+      - equal:
+          path: data.lives
+          value: "3"
+      - equal:
+          path: data["enemies.cheat"]
+          value: "true"
+      - equal:
+          path: data["enemies.cheat.level"]
+          value: noGoodRotten
+      - equal:
+          path: metadata.name
+          value: test-configmap
+      - equal:
+          path: metadata.namespace
+          value: family-sampleapp-itg
+
+  - it: "ConfigMap creation under the default namespace"
+    set:
+      global:
+        landscape: ""
+      deployment.configmap:
+        - name: test-configmap-default    
+          data:
+            lives: 3
+            enemies.cheat: true
+            enemies.cheat.level: noGoodRotten
+    asserts:
+      - hasDocuments:
+          count: 1
+      - containsDocument:
+          kind: ConfigMap
+          apiVersion: v1
+          namespace: default
+          name: test-configmap-default
+      - equal:
+          path: data.lives
+          value: "3"
+      - equal:
+          path: data["enemies.cheat"]
+          value: "true"
+      - equal:
+          path: data["enemies.cheat.level"]
+          value: noGoodRotten
+
+

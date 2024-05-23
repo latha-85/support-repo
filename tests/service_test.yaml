@@ -1,0 +1,178 @@
+suite: Test common.service.tpl
+
+templates:
+  - service.yaml
+
+tests:
+  - it: should render a basic ClusterIP service
+    set:
+      global:
+        namespace: my-namespace
+        landscape: my-landscape
+      service:
+        type: ClusterIP
+        headless: false
+        annotations: null
+        extendSelector: null
+    asserts:
+      - equal:
+          path: spec.type
+          value: ClusterIP
+      - equal:
+          path: metadata.labels.app
+          value: release-name
+      - equal:
+          path: metadata.labels.cobaltid
+          value: RELEASE-NAME
+      - equal:
+          path: spec.publishNotReadyAddresses
+          value: true
+
+  - it: should render a headless service
+    set:
+      global:
+        namespace: my-namespace
+        landscape: my-landscape
+      service:
+        type: ClusterIP
+        headless: true
+        publishNotReadyAddresses: true
+        annotations: null
+        extendSelector: null
+    asserts:
+      - equal:
+          path: spec.clusterIP
+          value: None
+      - equal:
+          path: spec.publishNotReadyAddresses
+          value: true
+
+  - it: should render a service with session affinity
+    set:
+      global:
+        namespace: my-namespace
+        landscape: my-landscape
+      service:
+        type: ClusterIP
+        headless: false
+        annotations: null
+        sessionAffinity: true
+        sessionAffinityConfig:
+          clientIP:
+            timeoutSeconds: 10800
+        extendSelector: null
+    asserts:
+      - equal:
+          path: spec.sessionAffinity
+          value: ClientIP
+      - equal:
+          path: spec.sessionAffinityConfig.clientIP.timeoutSeconds
+          value: 10800
+
+  - it: should render a service with extended selector
+    set:
+      global:
+        namespace: my-namespace
+        landscape: my-landscape
+      service:
+        type: ClusterIP
+        headless: false
+        annotations: null
+        extendSelector:
+          environment: "production"
+          tier: "backend"
+    asserts:
+      - equal:
+          path: spec.selector.environment
+          value: production
+      - equal:
+          path: spec.selector.tier
+          value: backend
+
+  - it: should render a service with annotations
+    set:
+      global:
+        namespace: my-namespace
+        landscape: my-landscape
+      service:
+        type: ClusterIP
+        headless: false
+        annotations:
+          key1: value1
+          key2: value2
+        extendSelector: null
+    asserts:
+      - equal:
+          path: metadata.annotations.key1
+          value: value1
+      - equal:
+          path: metadata.annotations.key2
+          value: value2
+
+  - it: should render a service with port configuration
+    set:
+      global:
+        namespace: my-namespace
+        landscape: my-landscape
+      service:
+        type: ClusterIP
+        headless: false
+        annotations: null
+        ports:
+          - name: http
+            port: 80
+            targetPort: 8080
+            protocol: TCP
+    asserts:
+      - equal:
+          path: spec.ports[0].name
+          value: http
+      - equal:
+          path: spec.ports[0].port
+          value: 80
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 8080
+      - equal:
+          path: spec.ports[0].protocol
+          value: TCP
+
+  - it: should render the service in the correct namespace
+    set:
+      global:
+        namespace: my-namespace
+        landscape: my-landscape
+      service:
+        type: ClusterIP
+        headless: false
+        annotations: null
+        extendSelector: null
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: my-namespace
+
+  - it: should render a headless service with session affinity
+    set:
+      global:
+        namespace: my-namespace
+        landscape: my-landscape
+      service:
+        type: ClusterIP
+        headless: true
+        sessionAffinity: true
+        sessionAffinityConfig:
+          clientIP:
+            timeoutSeconds: 10800
+        annotations: null
+        extendSelector: null
+    asserts:
+      - equal:
+          path: spec.clusterIP
+          value: None
+      - equal:
+          path: spec.sessionAffinity
+          value: ClientIP
+      - equal:
+          path: spec.sessionAffinityConfig.clientIP.timeoutSeconds
+          value: 10800
